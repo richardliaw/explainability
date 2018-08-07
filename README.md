@@ -2,13 +2,15 @@
 
 #### Install all dependencies:
 
-1. git clone https://github.com/michaeltu1/lime.git
-2. cd ~/lime
-3. pip install -e .
-4. git clone https://github.com/michaeltu1/Mask_RCNN.git
-5. cd ~/mask_rcnn
-6. pip install -e .
-7. pip install ray
+```
+git clone https://github.com/michaeltu1/lime.git
+cd ~/lime
+pip install -e .
+git clone https://github.com/michaeltu1/Mask_RCNN.git
+cd ~/mask_rcnn
+pip install -e .
+pip install ray
+```
   
 ### bandits_testing.ipynb
 Using Epsilon Greedy Selection to choose impactful superpixels to perturb instead of choosing randomly  
