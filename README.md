@@ -5,7 +5,7 @@ git clone https://github.com/michaeltu1/lime.git
 cd ~/lime
 pip install -e .
 git clone https://github.com/michaeltu1/Mask_RCNN.git
-cd ~/mask_rcnn
+cd ~/Mask_RCNN
 pip install -e .
 pip install ray
 git clone https://github.com/michaeltu1/explainability.git
@@ -19,6 +19,10 @@ The chosen superpixels are used to generate a data neighborhood for the Ridge Re
 Original Model: VGG16  
 Dataset: MS COCO 2017 Validation Set  
 Use Epsilon Greedy Selection + LIME to understand model during intermediate stages of training  
+
+### lime_mask_rcnn.ipynb
+1. Using LIME on the Bounding Box of Regions of Interest  
+2. Comparing Image Segmentation (LIME Superpixels) vs. Object Segmentation (Mask-RCNN Regions of Interest)  
 
 ### superpixel_testing.ipynb
 Visualizing explanations under small incremental transformations  
