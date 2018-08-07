@@ -1,7 +1,5 @@
 ### Getting Started
 
-#### Install all dependencies:
-
 ```
 git clone https://github.com/michaeltu1/lime.git
 cd ~/lime
@@ -10,6 +8,7 @@ git clone https://github.com/michaeltu1/Mask_RCNN.git
 cd ~/mask_rcnn
 pip install -e .
 pip install ray
+git clone https://github.com/michaeltu1/explainability.git
 ```
   
 ### bandits_testing.ipynb
