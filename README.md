@@ -9,6 +9,14 @@ cd ~/Mask_RCNN
 pip install -e .
 pip install ray
 git clone https://github.com/michaeltu1/explainability.git
+cd ~/explainability
+
+# For coco.ipynb (downloading COCO val data)
+wget -qO- -O tmp.zip http://images.cocodataset.org/zips/val2017.zip && unzip tmp.zip && rm tmp.zip
+# Downloading annotations for downloaded images
+wget -qO- -O tmp.zip http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip && unzip tmp.zip && rm tmp.zip
+
+# Must also install pycocotools see [link](https://github.com/cocodataset/cocoapi)
 ```
   
 ### bandits_testing.ipynb
@@ -17,8 +25,11 @@ The chosen superpixels are used to generate a data neighborhood for the Ridge Re
 
 ### coco.ipynb
 Original Model: VGG16  
-Dataset: MS COCO 2017 Validation Set  
+Dataset: [MS COCO](http://cocodataset.org/#home) 2017 Validation Set  
 Use Epsilon Greedy Selection + LIME to understand model during intermediate stages of training  
+
+### explanations_during_training.ipynb
+Show LIME explanation during training of InceptionV3 Keras Model
 
 ### lime_mask_rcnn.ipynb
 1. Using LIME on the Bounding Box of Regions of Interest  
