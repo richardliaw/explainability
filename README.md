@@ -15,6 +15,8 @@ cd ~/explainability
 wget -qO- -O tmp.zip http://images.cocodataset.org/zips/val2017.zip && unzip tmp.zip && rm tmp.zip
 # Downloading annotations for downloaded images
 wget -qO- -O tmp.zip http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip && unzip tmp.zip && rm tmp.zip
+
+# Must also install pycocotools see [link](https://github.com/cocodataset/cocoapi)
 ```
   
 ### bandits_testing.ipynb
