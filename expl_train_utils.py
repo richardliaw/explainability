@@ -2,10 +2,11 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+from lime import lime_image
+from matplotlib.collections import PatchCollection
 from shapely.geometry import mapping
 from shapely.geometry import Point
 from skimage.segmentation import mark_boundaries
-from matplotlib.collections import PatchCollection
 
 
 class SubPlotter:
@@ -18,9 +19,8 @@ class SubPlotter:
         self.graph_count = 0
         self.use_bandits = use_bandits
         self.start = time.time()
-        self.fig, self.axeslist = plt.subplots(ncols=3, nrows=num_rows, figsize=(8 * 3, 10 * num_rows))
         
-    def analyzeIoU(self, x_train_batch, y_train_batch, shapely_polygons_batch, 
+    def analyzeIoU(self, model, x_train_batch, y_train_batch, shapely_polygons_batch, 
                    num_accurate=10, num_inaccurate=10, good=0.7, bad=0.3, limit=30):
         """Calculates and finds images with most accurate/inaccurate IoU
         
@@ -48,7 +48,7 @@ class SubPlotter:
             explainer = lime_image.LimeImageExplainer()
             s = time.time()
             expl = explainer.explain_instance(x_train_batch[i], model.predict, top_labels=1, hide_color=0,
-                                              num_samples=100, timed=True, batch_size=batch_size,
+                                              num_samples=100, timed=True, batch_size=128,
                                               use_bandits=self.use_bandits)
             diff = time.time() - s
             s = time.time()
@@ -65,6 +65,47 @@ class SubPlotter:
             i += 1
         return info
     
+    def plot_rand_segs(self, model, x_train_batch, shapely_polygons_batch, configs_batch, num_segs=3):
+        self.fig, self.axeslist = plt.subplots(ncols=3, nrows=num_segs, figsize=(8 * 3, 10 * num_segs))
+        rand_selection = np.random.randint(0, high=len(x_train_batch) - 1, size=3)
+        print(rand_selection)
+        
+        for i in rand_selection:
+            explainer = lime_image.LimeImageExplainer()
+            expl = explainer.explain_instance(x_train_batch[i], model.predict, top_labels=1, hide_color=0,
+                                              num_samples=100, timed=True, batch_size=128,
+                                              use_bandits=self.use_bandits)
+            score = calcIoU(shapely_polygons_batch[i], explainer.segments, explainer.features_to_use)
+            print(i, score)
+            
+            img, polygons, colors = configs_batch[i]
+            
+            # Display original image
+            _sp = self.axeslist.ravel()[self.graph_count]
+            _sp.imshow(img / 2 + 0.5, cmap=plt.gray())
+            _sp.set_axis_off()
+            self.graph_count += 1
+
+            # Display superpixel contrib
+            temp, mask = expl.get_image_and_mask(expl.top_labels[0], positive_only=False, 
+                                                 num_features=5, hide_rest=False)
+            _sp = self.axeslist.ravel()[self.graph_count]
+            _sp.imshow(mark_boundaries(temp, mask) / 2 + 0.5, cmap=plt.gray())
+            _sp.set_axis_off()
+            self.graph_count += 1
+            
+            # Display ground truth object segmentation
+            _sp = self.axeslist.ravel()[self.graph_count]
+            _sp.imshow(bbox_img)
+            ax = _sp.gca()
+            ax.set_autoscale_on(False)
+            p = PatchCollection(polygons, facecolor=colors, linewidths=0, alpha=0.4)
+            ax.add_collection(p)
+            p = PatchCollection(polygons, facecolor='none', edgecolors=colors, linewidths=2)
+            ax.add_collection(p)
+            self.graph_count += 1
+
+    
     def plot_seg_extremes(self, info, configs_batch):
         """Plots the accurate/inaccurate predicted segmentation and ground truth segmentation
         
@@ -72,8 +113,10 @@ class SubPlotter:
             info (array): output of analyzeIoU(...) function call
             configs_batch (np.array): array of (Bounding box image, polygons, colors) tuples
         """
+        self.fig, self.axeslist = plt.subplots(ncols=3, nrows=len(info), figsize=(8 * 3, 10 * len(info)))
+        
         for i, expl in info:
-            img, polygons, colors = configs[i]
+            img, polygons, colors = configs_batch[i]
             
             # Display original image
             _sp = self.axeslist.ravel()[self.graph_count]
