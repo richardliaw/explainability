@@ -2,21 +2,35 @@
 
 ```
 git clone https://github.com/michaeltu1/lime.git
-cd ~/lime
+cd lime
 pip install -e .
+cd ..
+
 git clone https://github.com/michaeltu1/Mask_RCNN.git
-cd ~/Mask_RCNN
+cd Mask_RCNN
 pip install -e .
+cd ..
+
 pip install ray
+
 git clone https://github.com/michaeltu1/explainability.git
-cd ~/explainability
+cd explainability
 
-# For coco.ipynb (downloading COCO val data)
 wget -qO- -O tmp.zip http://images.cocodataset.org/zips/val2017.zip && unzip tmp.zip && rm tmp.zip
-# Downloading annotations for downloaded images
-wget -qO- -O tmp.zip http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip && unzip tmp.zip && rm tmp.zip
+wget -qO- -O tmp.zip http://images.cocodataset.org/annotations/annotations_trainval2017.zip && unzip tmp.zip && rm tmp.zip
+cd ..
 
-# Must also install pycocotools see [link](https://github.com/cocodataset/cocoapi)
+git clone https://github.com/cocodataset/cocoapi.git
+cd cocoapi/PythonAPI
+make
+python setup.py install
+cd ../..
+
+pip install shapely
+
+git clone https://www.github.com/keras-team/keras-contrib.git
+cd keras-contrib
+python setup.py install
 ```
   
 ### bandits_testing.ipynb
