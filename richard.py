@@ -9,10 +9,7 @@ K.tensorflow_backend.set_session(sess)
 
 import os
 import cv2
-import collections
 import logging
-
-logger = logging.getLogger(__name__)
 
 from skimage.io import imread
 import matplotlib.pyplot as plt
@@ -25,22 +22,12 @@ except:
 from lime import lime_image
 import time
 from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-from pycocotools import mask as maskUtils
-import pylab
-pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 from coco_preprocessing import *
 from expl_train_utils import *
+from ray.rllib.utils.timer import TimerStat
 
-# In[8]:
-
-from keras.backend.tensorflow_backend import set_session
 from keras_contrib.applications.resnet import ResNet18
-from keras.applications import vgg16
-from keras.models import Model
-from keras.layers import Dense, GlobalAveragePooling2D, Input
-from keras.optimizers import Adam, SGD
 
 # ### Load Dataset
 
@@ -78,7 +65,7 @@ def get_largest_categories(coco, num_categories):
 
     used_categories = coco.loadCats(coco.getCatIds(catIds=used_ids))
     cat_names = [cat['name'] for cat in used_categories]
-    print('{} COCO categories used: \n{}\n'.format(
+    logger.info('{} COCO categories used: \n{}\n'.format(
         len(used_categories), ' '.join(cat_names)))
     return used_categories
 
@@ -86,7 +73,13 @@ def get_largest_categories(coco, num_categories):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
+
+    logger = logging.getLogger(__name__)
+
+    timers = {k: TimerStat() for k in ["predict", "preprocess"]}
     # initialize COCO api for instance annotations
+    logger.info("Initialize Coco.")
     coco_instance = COCO(annFile)
     
     largest_categories = get_largest_categories(coco_instance, NUM_CATEGORIES)
@@ -96,10 +89,13 @@ if __name__ == '__main__':
 
     # ### Load All Images
     imgIds = sum([coco_instance.getImgIds(catIds=used_id) for used_id in used_ids], [])
-    data = [
-        preprocess(coco_instance, img_info, used_ids)
-        for img_info in coco_instance.loadImgs(imgIds)[:100]
-    ]
+
+    data = []
+    for img_info in coco_instance.loadImgs(imgIds)[:100]:
+        with timers["preprocess"]:
+            data += [preprocess(coco_instance, img_info, used_ids)]
+
+    logger.info("Average Preprocess Time: {} seconds".format(timers["preprocess"].mean))
     data = np.array(data)
     np.random.shuffle(data)
     logger.info("Finished loading data.")
@@ -131,7 +127,7 @@ if __name__ == '__main__':
 
     temp = np.zeros((y_train.shape[0], NUM_CATEGORIES))
     for ft in used_ids:
-        vec = np.zeros(num_categories)
+        vec = np.zeros(NUM_CATEGORIES)
         vec[used_ids.index(ft)] = 1
         temp[np.where(y_train == ft)] = vec
 
@@ -142,7 +138,6 @@ if __name__ == '__main__':
     configs = np.array([config for configs in data[:, 2] for config in configs])
 
     # In[24]:
-    import ipdb; ipdb.set_trace(context=7)
     shapely_polygons = np.array(
         [polygon for polygons in data[:, 3] for polygon in polygons])
 
@@ -153,7 +148,7 @@ if __name__ == '__main__':
     for i in range(100):
         with timers["predict"]:
             preds = model.predict(x_train[i][np.newaxis, ])
-    print("Single Image Inference: {} seconds".format(timers["predict"].mean))
+    logger.info("Single Image Inference: {} seconds".format(timers["predict"].mean))
 
     model.load_weights('saved_weights/15.hdf5')
 
