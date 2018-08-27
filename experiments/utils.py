@@ -20,5 +20,47 @@ def get_largest_categories(coco, num_categories):
 
 class CocoImage():
     @staticmethod
-    def preprocess(coco, img_info, used_ids):
-        pass
+    def preprocess(coco, img_path, img_info, used_ids):
+        """Process images into a form that can be input into Keras Models.
+
+        Args:
+            coco (COCO object): coco object of portion of the coco dataset used
+            img_imnfo (dict): image to preprocess
+            used_ids (array): array of ints indicating which classes of coco are being used
+
+        Returns:
+            TODO(rliaw): Should return 1 CocoImage with multiple attributes.
+            bboxImgs (array): array of bounding box images for each object in the image
+            object_labels (array): labels for each object in bboxImgs
+            configs (array): configs for ground truth segmentation for each object
+                             i.e. each config in configs is used like: show_gt_mask(*config)
+            shapelyPolygons (array): Shapely Polygons of the ground truth segmentation for each object
+        """
+        image_url = os.path.join("../val2017/", img['file_name'])
+        I = io.imread(image_url)
+
+        # Get obj seg/bbox annotations of img
+        annIds = coco.getAnnIds(imgIds=img_info['id'], catIds=used_ids, iscrowd=None)
+        anns = coco.loadAnns(annIds)
+
+        polygons, object_labels, alt_segs, colors, bboxImgs = getPolygonsLabelsMasksColorsBboxImgs(coco, I, anns)
+
+        x = len(polygons)
+        assert len(object_labels) == x, (x, len(object_labels))
+        assert len(alt_segs) == x, (x, len(alt_segs))
+        assert len(colors) == x, (x, len(colors))
+        assert len(bboxImgs) == x, (x, len(bboxImgs))
+
+        # In order to call show_gt_mask(*config)
+        configs = []
+        for i in range(len(polygons)):
+            configs.append((bboxImgs[i], polygons[i], colors[i]))
+
+        # In order to check which points are in the Shapely Polygon later
+        shapelyPolygons = []
+        for seg in alt_segs:
+            shapelyPolygons.append(Pgon(pairwise_group(seg[0])))
+
+        assert len(configs) == len(shapelyPolygons)
+
+        return bboxImgs, object_labels, configs, shapelyPolygons
