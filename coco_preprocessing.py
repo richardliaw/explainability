@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import skimage.io as io
 import matplotlib.pyplot as plt
 
@@ -166,11 +167,12 @@ def preprocess(coco, img, used_ids):
                          i.e. each config in configs is used like: show_gt_mask(*config)
         shapelyPolygons (array): Shapely Polygons of the ground truth segmentation for each object
     """
-    I = np.copy(io.imread(img['coco_url']))
+    image_url = os.path.join("../val2017/", img['file_name'])
+    I = io.imread(image_url)
     
     # Get obj seg/bbox annotations of img
-    annIds = coco.getAnnIds(imgIds=img['id'], catIds=used_ids, iscrowd=None).copy()
-    anns = coco.loadAnns(annIds).copy()
+    annIds = coco.getAnnIds(imgIds=img['id'], catIds=used_ids, iscrowd=None)
+    anns = coco.loadAnns(annIds)
     
     polygons, object_labels, alt_segs, colors, bboxImgs = getPolygonsLabelsMasksColorsBboxImgs(coco, I, anns)
     
